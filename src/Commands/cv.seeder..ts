@@ -8,12 +8,11 @@ import {
   randLastName,
   randJobTitle,
   randNumber,
-  randUuid,
   randEmail,
   randPassword,
-  randSkill
+  randSkill,
 } from '@ngneat/falso';
-/*
+
 async function bootstrap() {
   const app = await NestFactory.createApplicationContext(AppModule);
 
@@ -23,28 +22,31 @@ async function bootstrap() {
 
   console.log('🌱 Seeding database...');
 
-  // 1. Créer des skills
-  const skillNames = [...new Set(Array.from({ length: 10 }, () => randSkill()))];
+  // 1. Create skills
+  const skillNames = [
+    ...new Set(Array.from({ length: 10 }, () => randSkill())),
+  ];
   const skills = await Promise.all(
-    skillNames.map((designation) => skillService.create({ designation }))
+    skillNames.map((designation) => skillService.create({ designation })),
   );
 
-  // 2. Créer des users
+  // 2. Create users
   const users = await Promise.all(
     Array.from({ length: 5 }).map(() =>
       userService.create({
-        username: randFirstName().toLowerCase() + randNumber({ min: 1, max: 99 }),
+        username:
+          randFirstName().toLowerCase() + randNumber({ min: 1, max: 99 }),
         email: randEmail(),
         password: randPassword(),
       }),
     ),
   );
 
-  // 3. Créer des CVs
+  // 3. Create CVs
   await Promise.all(
     Array.from({ length: 10 }).map(async () => {
-      const user = users[randNumber({ min: 0, max: users.length - 1 })];
-      const selectedSkills = skills
+      const randomUser = users[randNumber({ min: 0, max: users.length - 1 })];
+      const randomSkills = skills
         .sort(() => 0.5 - Math.random())
         .slice(0, randNumber({ min: 1, max: 3 }));
 
@@ -52,11 +54,11 @@ async function bootstrap() {
         name: randLastName(),
         firstname: randFirstName(),
         age: randNumber({ min: 20, max: 60 }),
-        cin: randUuid(),
+        cin: randNumber({ min: 10000000, max: 99999999 }),
         job: randJobTitle(),
         path: 'cv.pdf',
-        user,
-        skills: selectedSkills,
+        userId: randomUser.id, // Changed from user: {id} to userId
+        skillIds: randomSkills.map((skill) => skill.id), // Changed from skills to skillIds
       });
     }),
   );
@@ -65,5 +67,3 @@ async function bootstrap() {
   await app.close();
 }
 bootstrap();
-
- */

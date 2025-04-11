@@ -1,9 +1,14 @@
-import { IsNotEmpty, IsNumber, IsOptional, IsString, Max, Min } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Max,
+  Min,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateCvDto {
-
-
   @IsNotEmpty()
   @IsString()
   name: string;
@@ -13,14 +18,14 @@ export class CreateCvDto {
   firstname: string;
 
   @IsNotEmpty()
-  @Type(() => Number )
+  @Type(() => Number)
   @IsNumber()
   @Min(15)
   @Max(65)
   age: number;
 
   @IsNotEmpty()
-  @Type(() => Number )
+  @Type(() => Number)
   @IsNumber()
   cin: number;
 
@@ -32,4 +37,10 @@ export class CreateCvDto {
   @IsString()
   path: string;
 
+  @IsNumber()
+  userId: number; // Changed from 'user' to 'userId' for better practice
+
+  @IsOptional()
+  @IsNumber({}, { each: true })
+  skillIds?: number[]; // Changed from 'skills' to 'skillIds'
 }

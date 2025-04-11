@@ -1,12 +1,7 @@
-import {
-  IsNotEmpty,
-  IsNumber,
-  IsOptional,
-  IsString,
-  Max,
-  Min,
-} from 'class-validator';
+import { ArrayNotEmpty, IsArray, IsNotEmpty, IsNumber, IsOptional, IsString, Max, Min } from 'class-validator';
 import { Type } from 'class-transformer';
+import {User} from "../../user/entities/user.entity";
+import {Skill} from "../../skill/entities/skill.entity";
 
 export class CreateCvDto {
   @IsNotEmpty()
@@ -37,10 +32,13 @@ export class CreateCvDto {
   @IsString()
   path: string;
 
+  @IsNotEmpty()
   @IsNumber()
-  userId: number; // Changed from 'user' to 'userId' for better practice
+  userId: number;  // Only the ID, not the whole User object.
 
-  @IsOptional()
+  @IsNotEmpty()
+  @IsArray()
+  @ArrayNotEmpty()
   @IsNumber({}, { each: true })
-  skillIds?: number[]; // Changed from 'skills' to 'skillIds'
+  skillIds: number[];
 }

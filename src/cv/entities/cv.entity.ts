@@ -28,9 +28,7 @@ export class CvEntity {
   @Column()
   age: number;
 
-  @Column({
-    unique: true,
-  })
+  @Column()
   cin: number;
 
   @Column()

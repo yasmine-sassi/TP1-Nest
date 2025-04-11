@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { ObjectLiteral, Repository } from 'typeorm';
+import {In, ObjectLiteral, Repository} from 'typeorm';
 
 @Injectable()
 export class BaseService<T extends ObjectLiteral> {
   constructor(protected readonly repository: Repository<T>) {}
 
-  async create(entity: any): Promise<T> {
+  async Create(entity: any): Promise<T> {
     return this.repository.save(entity);
   }
 
@@ -25,4 +25,8 @@ export class BaseService<T extends ObjectLiteral> {
   async remove(id: number): Promise<void> {
     await this.repository.delete(id);
   }
+  async findByIds(ids: number[]): Promise<T[]> {
+    return this.repository.findBy({ id: In(ids) } as any);
+  }
+
 }

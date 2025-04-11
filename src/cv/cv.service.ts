@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CvEntity } from './entities/cv.entity';
-import { Repository } from 'typeorm';
+import {In, Repository} from 'typeorm';
 import { BaseService } from '../Generics/base.service';
 import { CreateCvDto } from './dto/create-cv.dto';
 import { UpdateCvDto } from './dto/update-cv.dto';
@@ -11,29 +11,44 @@ import { Skill } from '../skill/entities/skill.entity';
 @Injectable()
 export class CvService extends BaseService<CvEntity> {
   constructor(
-    @InjectRepository(CvEntity)
-    protected readonly repository: Repository<CvEntity>,
+      @InjectRepository(CvEntity)
+      private readonly cvRepository: Repository<CvEntity>,
+
+      @InjectRepository(User)
+      private readonly userRepository: Repository<User>,
+
+      @InjectRepository(Skill)
+      private readonly skillRepository: Repository<Skill>
   ) {
-    super(repository);
+    super(cvRepository);
   }
-
   async create(createCvDto: CreateCvDto): Promise<CvEntity> {
-    const { userId, skillIds, ...cvData } = createCvDto;
+    // Step 1: Fetch the User entity by userId
+    const user = await this.userRepository.findOne({
+      where: { id: createCvDto.userId },
+    });
 
-    const cv = this.repository.create(cvData);
-
-    // Handle user relationship
-    if (userId) {
-      cv.user = { id: userId } as User;
+    // If the User is not found, throw an exception or handle it
+    if (!user) {
+      throw new Error(`User with ID ${createCvDto.userId} not found.`);
     }
 
-    // Handle skills relationship
-    if (skillIds && skillIds.length > 0) {
-      cv.skills = skillIds.map((id) => ({ id }) as Skill);
-    }
+    // Step 2: Fetch the Skills based on the skillIds
+    const skills = await this.skillRepository.findBy({
+      id: In(createCvDto.skillIds),
+    });
 
-    return this.repository.save(cv);
+
+    // Step 4: Save and return the created CV
+    return await this.cvRepository.save({
+      ...createCvDto,  // Spread the DTO fields
+      user,             // Attach the User entity
+      skills,           // Attach the Skills array
+    });
   }
+
+
+  /*
 
   async findAll(): Promise<CvEntity[]> {
     return this.repository.find();
@@ -90,4 +105,6 @@ export class CvService extends BaseService<CvEntity> {
 
     return { items, total, page, limit };
   }
+
+ */
 }

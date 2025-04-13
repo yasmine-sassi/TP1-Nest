@@ -1,4 +1,4 @@
-import { Module, ParseIntPipe } from '@nestjs/common';
+import {MiddlewareConsumer, Module, NestModule, ParseIntPipe} from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { CvModule } from './cv/cv.module';
@@ -10,6 +10,7 @@ import * as process from 'process';
 import { User } from './user/entities/user.entity';
 import { CvEntity } from './cv/entities/cv.entity';
 import { Skill } from './skill/entities/skill.entity';
+import {AuthMiddleware} from "src/middelwares/auth.middleware";
 
 dotenv.config();
 @Module({
@@ -32,4 +33,10 @@ dotenv.config();
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+        .apply(AuthMiddleware)
+        .forRoutes('v2/cv'); // S'applique uniquement à la version 2 du contrôleur Cv
+  }
+}

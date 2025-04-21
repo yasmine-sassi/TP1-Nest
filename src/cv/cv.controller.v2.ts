@@ -9,22 +9,28 @@ import {
     Param,
     Delete,
     NotFoundException,
-    ForbiddenException,
+    ForbiddenException, UseInterceptors, UploadedFile,
 } from '@nestjs/common';
 import { CvService } from './cv.service';
 import { CreateCvDto } from './dto/create-cv.dto';
 import { UpdateCvDto } from './dto/update-cv.dto';
+import {FileInterceptor} from "@nestjs/platform-express";
+import {ImageValidationPipe} from "src/file-upload/pipes/image_validation.pipe";
 
 @Controller({ path: 'cv', version: '2' })
 export class CvControllerV2 {
     constructor(private readonly cvService: CvService) {}
 
     @Post()
-    async create(@Body() dto: CreateCvDto, @Request() req) {
-        return this.cvService.create({
-            ...dto,
-            userId: req.user.id,
-        });
+    async create(
+        @Body() dto: CreateCvDto,
+        @Request() req,
+        @UploadedFile(ImageValidationPipe) file: Express.Multer.File
+    ) {
+        return this.cvService.create(
+            { ...dto, userId: req.user.id },
+            file
+        );
     }
 
     @Put(':id')

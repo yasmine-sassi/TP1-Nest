@@ -5,15 +5,19 @@ import { CvService } from './cv.service';
 import { CvController } from './cv.controller';
 import { UserModule } from '../user/user.module';
 import { SkillModule } from '../skill/skill.module';
+import {FileUploadModule} from "src/file-upload/file-upload.module";
+import {User} from "src/user/entities/user.entity";
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([CvEntity]), // Provides CvRepository
-    UserModule, // If you need UserRepository in CvService
-    SkillModule, // If you need SkillRepository in CvService
+    TypeOrmModule.forFeature([CvEntity,User]), // Provides CvRepository
+    UserModule,
+    SkillModule,
+    FileUploadModule
+
   ],
   controllers: [CvController],
   providers: [CvService],
-  exports: [CvService, TypeOrmModule], // Export both service and TypeORM module
+  exports: [CvService, TypeOrmModule],
 })
 export class CvModule {}

@@ -34,8 +34,8 @@ export class CvEntity {
   @Column()
   job: string;
 
-  @Column()
-  path: string;
+  @Column({ nullable: true })
+  path?: string;
 
   @ManyToOne((type) => User, (user) => user.cvs, {
     cascade: ['insert', 'update'],

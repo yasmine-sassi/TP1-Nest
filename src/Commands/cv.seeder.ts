@@ -37,7 +37,7 @@ async function bootstrap() {
 
     const userDto: CreateUserDto = {
       username: firstname.toLowerCase() + randNumber({ min: 1, max: 99 }[0]),
-      password : randPassword({ length: 12 }), // generates a 12-character password
+      password : randPassword({ length: 12 })[0][0], // generates a 12-character password
     };
 
     const user = await userService.create(userDto);

@@ -5,7 +5,7 @@ import {In, ObjectLiteral, Repository} from 'typeorm';
 export class BaseService<T extends ObjectLiteral> {
   constructor(protected readonly repository: Repository<T>) {}
 
-  async Create(entity: any): Promise<T> {
+  async create(entity: any): Promise<T> {
     return this.repository.save(entity);
   }
 

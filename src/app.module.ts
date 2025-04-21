@@ -12,6 +12,7 @@ import { CvEntity } from './cv/entities/cv.entity';
 import { Skill } from './skill/entities/skill.entity';
 import {AuthMiddleware} from "src/middelwares/auth.middleware";
 
+
 dotenv.config();
 @Module({
   imports: [

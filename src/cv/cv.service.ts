@@ -1,12 +1,13 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CvEntity } from './entities/cv.entity';
-import {In, Repository} from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { BaseService } from '../Generics/base.service';
 import { CreateCvDto } from './dto/create-cv.dto';
 import { UpdateCvDto } from './dto/update-cv.dto';
 import { User } from '../user/entities/user.entity';
 import { Skill } from '../skill/entities/skill.entity';
+import { FileUploadService } from 'src/file-upload/file-upload.service';
 
 @Injectable()
 export class CvService extends BaseService<CvEntity> {
@@ -18,93 +19,85 @@ export class CvService extends BaseService<CvEntity> {
       private readonly userRepository: Repository<User>,
 
       @InjectRepository(Skill)
-      private readonly skillRepository: Repository<Skill>
+      private readonly skillRepository: Repository<Skill>,
+
+      private readonly fileUploadService: FileUploadService,
   ) {
     super(cvRepository);
   }
-  async create(createCvDto: CreateCvDto): Promise<CvEntity> {
+
+  async create(createCvDto: CreateCvDto, file?: Express.Multer.File): Promise<CvEntity> {
+    let path = '';
+    if (file) {
+      try {
+        path = await this.fileUploadService.saveImage(file);
+      } catch (error) {
+        throw new BadRequestException('File upload failed.');
+      }
+    }
+
     // Step 1: Fetch the User entity by userId
     const user = await this.userRepository.findOne({
       where: { id: createCvDto.userId },
     });
 
-    // If the User is not found, throw an exception or handle it
     if (!user) {
-      throw new Error(`User with ID ${createCvDto.userId} not found.`);
+      throw new NotFoundException(`User with ID ${createCvDto.userId} not found.`);
     }
 
     // Step 2: Fetch the Skills based on the skillIds
+    if (createCvDto.skillIds.length === 0) {
+      throw new BadRequestException('At least one skill ID is required.');
+    }
+
     const skills = await this.skillRepository.findBy({
       id: In(createCvDto.skillIds),
     });
-
 
     // Step 4: Save and return the created CV
     return await this.cvRepository.save({
       ...createCvDto,  // Spread the DTO fields
       user,             // Attach the User entity
-      skills,           // Attach the Skills array
+      skills,
+      file,             // Attach the file path
     });
   }
 
 
-  /*
 
-  async findAll(): Promise<CvEntity[]> {
-    return this.repository.find();
+
+
+
+
+async filterByCriteria(criteria: string, age?: number): Promise<CvEntity[]> {
+  const qb = this.repository.createQueryBuilder('cv');
+  if (criteria) {
+    qb.andWhere(
+      'cv.name LIKE :crit OR cv.firstname LIKE :crit OR cv.job LIKE :crit',
+      { crit: `%${criteria}%` },
+    );
   }
-
-  async findOne(id: number): Promise<CvEntity> {
-    const cv = await this.repository.findOneBy({ id });
-    if (!cv) {
-      throw new NotFoundException(`CV with ID ${id} not found`);
-    }
-    return cv;
+  if (age) {
+    qb.andWhere('cv.age = :age', { age });
   }
+  return qb.getMany();
+}
 
-  async update(id: number, updateCvDto: UpdateCvDto): Promise<CvEntity> {
-    await this.repository.update(id, updateCvDto);
-    return this.findOne(id);
-  }
+async paginate(
+  qb: any,
+  page: number = 1,
+  limit: number = 10,
+): Promise<{
+  items: CvEntity[];
+  total: number;
+  page: number;
+  limit: number;
+}> {
+  const [items, total] = await qb
+    .skip((page - 1) * limit)
+    .take(limit)
+    .getManyAndCount();
 
-  async delete(id: number): Promise<void> {
-    const result = await this.repository.delete(id);
-    if (result.affected === 0) {
-      throw new NotFoundException(`CV with ID ${id} not found`);
-    }
-  }
-
-  async filterByCriteria(criteria: string, age?: number): Promise<CvEntity[]> {
-    const qb = this.repository.createQueryBuilder('cv');
-    if (criteria) {
-      qb.andWhere(
-        'cv.name LIKE :crit OR cv.firstname LIKE :crit OR cv.job LIKE :crit',
-        { crit: `%${criteria}%` },
-      );
-    }
-    if (age) {
-      qb.andWhere('cv.age = :age', { age });
-    }
-    return qb.getMany();
-  }
-
-  async paginate(
-    qb: any,
-    page: number = 1,
-    limit: number = 10,
-  ): Promise<{
-    items: CvEntity[];
-    total: number;
-    page: number;
-    limit: number;
-  }> {
-    const [items, total] = await qb
-      .skip((page - 1) * limit)
-      .take(limit)
-      .getManyAndCount();
-
-    return { items, total, page, limit };
-  }
-
- */
+  return { items, total, page, limit };
+}
 }
